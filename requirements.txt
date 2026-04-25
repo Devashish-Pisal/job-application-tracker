@@ -1,0 +1,10 @@
+google-api-python-client
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+python-dotenv
+loguru
+pandas
+beautifulsoup4
+google-genai
+rapidfuzz
