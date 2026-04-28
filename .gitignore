@@ -6,6 +6,11 @@ __pycache__/
 # C extensions
 *.so
 
+# manual check folder
+data/manual_check/
+
+# IntelliJ folders
+.idea/
 
 # secrets
 .env
