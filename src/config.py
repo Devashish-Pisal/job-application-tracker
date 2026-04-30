@@ -38,7 +38,17 @@ GMAIL_QUERY = (
 
 SHEET_NAME = "job_applications"
 SHEET_ID = os.getenv("SHEET_ID")
-
+SHEET_COLUMN_NAME_INDEX_MAPPING = { # Mapping of column names to its indices (don't modify the keys, only values (sheet indices) can be modified)
+    "application-date": "A",
+    "company-name": "B",
+    "role": "C",
+    "current-status": "D",
+    "current-confidence": "E",
+    "source": "F",
+    "history": "G",
+    "last-row-modification-date": "H",
+    "message-ids": "J",
+}
 
 # GEMINI SETTING
 GEMINI_CONFIG = {
