@@ -3,6 +3,7 @@ import json
 import re
 from pathlib import Path
 from loguru import logger
+from datetime import datetime
 from bs4 import BeautifulSoup
 from src.auth.google_auth import get_credentials
 from src.services.gmail_service import get_gmail_service
@@ -59,7 +60,6 @@ def generate_dedup_key(company_name:str, job_title:str):
     return f"{company_name}|{job_title}"
 
 
-
 def append_jsonl(file_path:Path, new_data):
     with open(file_path, "a", encoding="utf-8") as f:
         f.write(json.dumps(new_data, ensure_ascii=False) + "\n")
@@ -71,3 +71,48 @@ def get_gmail_and_sheet_services():
     sheet_service = get_sheets_service(creds=creds)
     return gmail_service, sheet_service
 
+
+def prepare_new_row_data(llm_output, email_data):
+    return{
+        "application_date": email_data.get("date"),
+        "company_name": llm_output.get("normalized_company_name").strip().upper(),
+        "role": llm_output.get("normalized_job_title").strip().lower(),
+        "current_status": llm_output.get("email_type"),
+        "current_confidence": llm_output.get("confidence"),
+        "source": email_data.get("source"),
+        "history": prepare_history_to_append(llm_output, email_data),
+        "last_row_modification_date": datetime.now().strftime("%Y-%m-%d"),
+        "message_id": email_data.get("id")
+    }
+
+
+
+
+def prepare_row_modification_data(llm_output, email_data, existing_row):
+    pass
+
+
+
+def prepare_history_to_append(llm_output, email_data):
+    formatted_llm = json.dumps(llm_output, indent=2, ensure_ascii=False)
+    history_entry = f"""--- NEW EMAIL ENTRY ---
+date appended: {datetime.now().strftime("%Y-%m-%d")}
+
+llm_output:
+{formatted_llm}
+
+email metadata:
+  message id: {email_data.get("id")}
+  date received: {email_data.get("date")}
+  sender name: {email_data.get("sender_name")}
+  sender email: {email_data.get("sender_email")}
+
+subject:
+{email_data.get("subject")}
+
+body:
+{email_data.get("body")}
+
+============================================================
+"""
+    return history_entry
