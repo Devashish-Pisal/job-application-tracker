@@ -1,5 +1,7 @@
+import json
 from googleapiclient.discovery import build
 from src.config import GMAIL_QUERY
+from path_config import FETCHED_EMAILS
 from loguru import logger
 
 
@@ -7,26 +9,8 @@ def get_gmail_service(creds):
     return build("gmail", "v1", credentials=creds)
 
 
-def fetch_emails(service, max_results=3):
-    results = service.users().messages().list(
-        userId="me",
-        q=GMAIL_QUERY,
-        maxResults=max_results
-    ).execute()
-    messages = results.get("messages", [])
-    emails = []
-    for msg in messages:
-        msg_data = service.users().messages().get(
-            userId="me",
-            id=msg["id"],
-            format="full"
-        ).execute()
-        emails.append(msg_data)
-    return emails
-
-
-# Pagination
-def fetch_all_emails(service, query, max_per_page=100):
+# With Pagination
+def fetch_all_emails_and_save(service, query, max_per_page=100):
     emails = []
     request = service.users().messages().list(
         userId="me",
@@ -43,11 +27,36 @@ def fetch_all_emails(service, query, max_per_page=100):
                 format="full"
             ).execute()
             emails.append(msg_data)
+            email_id = msg_data['id']
+            with open(str(FETCHED_EMAILS) + f"/{email_id}.json", "w", encoding="utf-8") as file:
+                file.write(json.dumps(msg_data, indent=2, ensure_ascii=False))
+                logger.info(f"{email_id}.json file saved!")
         request = service.users().messages().list_next(request, response)
     # Sort email based on "internalDate" field, oldest email first
     emails.sort(
         key=lambda m: int(m.get("internalDate", 0)),
         reverse=False
     )
-    logger.info(f"Total number of fetched email/s is/are {len(emails)}")
+    logger.info(f"Total number of fetched email/s is/are {len(emails)} and are stored in folder '{str(FETCHED_EMAILS)}'")
+
+
+
+'''
+# Without pagination
+def fetch_emails(service, max_results=3):
+    results = service.users().messages().list(
+        userId="me",
+        q=GMAIL_QUERY,
+        maxResults=max_results
+    ).execute()
+    messages = results.get("messages", [])
+    emails = []
+    for msg in messages:
+        msg_data = service.users().messages().get(
+            userId="me",
+            id=msg["id"],
+            format="full"
+        ).execute()
+        emails.append(msg_data)
     return emails
+'''
