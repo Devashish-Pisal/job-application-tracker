@@ -5,13 +5,13 @@ from email.utils import parsedate_to_datetime
 def parse_email(msg):
     header_data = extract_headers(msg)
     body = get_body(msg["payload"])
-    source = detect_source(header_data["from_name"], header_data["subject"], body)
+    # source = detect_source(header_data["from_name"], header_data["subject"], body)
     return {
         "date": header_data["date"],
         "sender_name": header_data["from_name"],
         "sender_email": header_data["from_email"],
         "subject": header_data["subject"],
-        "source": source,
+        # "source": source,
         "body": body,
         "id": header_data["id"],
     }
@@ -44,6 +44,7 @@ def extract_headers(email):
     return data
 
 
+
 def get_body(payload):
     """
     Recursively extract email body.
@@ -67,6 +68,7 @@ def get_body(payload):
     return ""
 
 
+'''
 def detect_source(sender, subject, body):
     text = (sender + subject + body).lower()
     if "stepstone" in text:
@@ -78,4 +80,5 @@ def detect_source(sender, subject, body):
     if "xing" in text:
         return "XING"
     return "Company Website / Other"
+'''
 
