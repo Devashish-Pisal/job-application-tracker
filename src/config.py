@@ -64,7 +64,7 @@ SHEET_COLUMN_NAME_INDEX_MAPPING = { # Do not edit this dict, because currently i
 # GEMINI SETTING
 GEMINI_CONFIG = {
     "api_key": os.getenv("GEMINI_API_KEY"),
-    "model": "gemini-2.5-flash",
+    "model": "gemini-2.5-flash-lite",
     "max_retries": 5,
     "temp": 0.2,
     "consecutive_query_delay": 5, # in seconds
