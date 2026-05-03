@@ -6,7 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
-# manual check folder
+# sub folders of data folder
+data/fetched_emails/
+data/logs/
 data/manual_check/
 
 # IntelliJ folders
