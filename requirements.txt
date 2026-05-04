@@ -8,3 +8,4 @@ pandas
 beautifulsoup4
 google-genai
 rapidfuzz
+pytest
