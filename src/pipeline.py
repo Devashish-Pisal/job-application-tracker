@@ -1,15 +1,13 @@
 import json
-import os
 import time
 from loguru import logger
-from path_config import  PROMPTS_DIR_PATH, DUP_BY_MSG_ID_FILE_PATH, DUP_BY_FUZZY_MATCH, LLM_LOW_CONF_OUTPUT_FILE, FETCHED_EMAILS
-from src.services.gmail_service import fetch_all_emails_and_save
-from src.config import SHEET_ID, GEMINI_CONFIG, GMAIL_BACKFILL_QUERY, GMAIL_SYNC_QUERY, SHEET_COLUMN_NAME_INDEX_MAPPING
-from src.llm.gemini import get_gemini_client, extract_job_info
-from src.utils.helpers import load_raw_prompt, convert_email_dict_to_text, append_jsonl, get_gmail_and_sheet_services, construct_logging_object, delete_files, setup_logger, create_necessary_paths
 from src.services.parser_service import parse_email
-from src.services.sheets_service import (append_row, message_exists_by_id, fuzzy_match_column_values, modify_row, fuzzy_match_company_and_role,
-                                         prepare_new_row_data)
+from src.llm.gemini import get_gemini_client, extract_job_info
+from src.config import SHEET_ID, GEMINI_CONFIG, SHEET_COLUMN_NAME_INDEX_MAPPING
+from path_config import  PROMPTS_DIR_PATH, DUP_BY_MSG_ID_FILE_PATH, DUP_BY_FUZZY_MATCH, LLM_LOW_CONF_OUTPUT_FILE, FETCHED_EMAILS
+from src.utils.helpers import load_raw_prompt, convert_email_dict_to_text, append_jsonl, get_gmail_and_sheet_services, construct_logging_object, delete_files
+from src.services.sheets_service import append_row, message_exists_by_id, fuzzy_match_column_values, modify_row, fuzzy_match_company_and_role, prepare_new_row_data
+
 
 
 def process_high_conf_output(sheet_service,llm_output, email_data, logging_obj):
@@ -54,6 +52,7 @@ def process_high_conf_output(sheet_service,llm_output, email_data, logging_obj):
     else: # Company name - Absent; Role - Absent
         logging_obj["Reason"] = f"Both Company Name and Role absent, but still classified as high confidence llm output."
         append_jsonl(DUP_BY_FUZZY_MATCH, logging_obj)
+
 
 
 
@@ -103,12 +102,3 @@ def pipeline():
         delete_files(processed_files)
 
 
-
-if __name__ == "__main__":
-    query = GMAIL_SYNC_QUERY
-    setup_logger()
-    create_necessary_paths()
-    if not any(FETCHED_EMAILS.iterdir()):
-        g_service, _  = get_gmail_and_sheet_services()
-        fetch_all_emails_and_save(g_service, GMAIL_QUERY)
-    backfill_pipeline()
