@@ -1,14 +1,16 @@
 import os
 from dotenv import load_dotenv
-
 load_dotenv()
+
 
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
     "https://www.googleapis.com/auth/spreadsheets"
 ]
 
-GMAIL_QUERY = (
+
+# https://support.google.com/mail/answer/7190?hl=en (gmail query documentation)
+GMAIL_BACKFILL_QUERY = (
     # Get messages only from the inbox
     'in:inbox'
     '('
@@ -35,22 +37,30 @@ GMAIL_QUERY = (
     # Noise reduction
     '-("unsubscribe" OR "newsletter" OR "marketing" OR "sale" OR "discount" OR "Bank of Maharashtra" OR "Vikas Pisal" OR "Recharge successful" OR "LeetCode" OR "Github" OR "Telekom" OR "Ausländerbehörde")'
     # Time filter (YYYY/MM/DD) (after-inclusive) (before-exclusive)
-    'after:2026/04/15'  # Adjust the date based on use case (backfilling, sync)
-    #'before:2026/05/01'
+    'after:2026/02/01 '  # Adjust the date based on the backfilling time period
+    #'before:2026/05/01 '
 )
-
 
 # To execute in gmail app:
 '''
-(in:inbox "application received" OR "thank you for applying" OR "application confirmation" OR "Ihre Bewerbung" OR "Bewerbung erhalten" OR "Deine Bewerbung" OR "interview" OR "interview invitation" OR "technical interview" OR "assessment" OR "online test" OR "coding challenge" OR "Vorstellungsgespräch" OR "Interview Einladung" OR "Einstellungstest" OR "job offer" OR "offer letter" OR "we are pleased to offer" OR "Angebot" OR "Stellenangebot" OR "rejection" OR "we regret to inform" OR "Absage" OR "nicht berücksichtigen") -from:glassdoor -from:xing -from:stepstone -from:indeed -from:linkedin -in:sent -from:me -("job alert" OR "recommended jobs" OR "jobs you may like" OR "You have a great chance for an interview for this job" OR "recommendation") -("unsubscribe" OR "newsletter" OR "marketing" OR "sale" OR "discount" OR "Bank of Maharashtra" OR "Vikas Pisal" OR "Recharge successful" OR "LeetCode" OR "Github" OR "Telekom" OR "Ausländerbehörde") after:2026/02/01 before:2026/05/01
+(in:inbox "application received" OR "thank you for applying" OR "application confirmation" OR "Ihre Bewerbung" OR "Bewerbung erhalten" OR "Deine Bewerbung" OR "interview" OR "interview invitation" OR "technical interview" OR "assessment" OR "online test" OR "coding challenge" OR "Vorstellungsgespräch" OR "Interview Einladung" OR "Einstellungstest" OR "job offer" OR "offer letter" OR "we are pleased to offer" OR "Angebot" OR "Stellenangebot" OR "rejection" OR "we regret to inform" OR "Absage" OR "nicht berücksichtigen") -from:glassdoor -from:xing -from:stepstone -from:indeed -from:linkedin -in:sent -from:me -("job alert" OR "recommended jobs" OR "jobs you may like" OR "You have a great chance for an interview for this job" OR "recommendation") -("unsubscribe" OR "newsletter" OR "marketing" OR "sale" OR "discount" OR "Bank of Maharashtra" OR "Vikas Pisal" OR "Recharge successful" OR "LeetCode" OR "Github" OR "Telekom" OR "Ausländerbehörde") after:2026/02/01 
 '''
+
+GMAIL_SYNC_QUERY = (
+    'label:job-application '
+    # Adjust the following time periods based on sync frequency
+    # 'after:2026/05/01 ' # inclusive (YYYY/MM/DD)
+    # 'before:2026/05/04 ' # exclusive (YYYY/MM/DD)
+    # 'newer_than:1d ' # for daily sync setup
+)
 
 
 
 SHEET_NAME = "job_applications"
 SHEET_ID = os.getenv("SHEET_ID")
-SHEET_COLUMN_NAME_INDEX_MAPPING = { # Do not edit this dict, because currently it is hardcoded in codebase
-    "application-date": "A", # idx = 0 (for row modification)
+# Do not edit this dict, because currently it is hardcoded in codebase
+SHEET_COLUMN_NAME_INDEX_MAPPING = {
+    "application-date": "A", # idx = 0
     "company-name": "B", # idx = 1
     "role": "C",  # idx = 2
     "current-status": "D",  # idx = 3
@@ -60,6 +70,8 @@ SHEET_COLUMN_NAME_INDEX_MAPPING = { # Do not edit this dict, because currently i
     "last-row-modification-date": "H",  # idx = 7
     "message-ids": "I",  # idx = 8
 }
+
+
 
 # GEMINI SETTING
 GEMINI_CONFIG = {
