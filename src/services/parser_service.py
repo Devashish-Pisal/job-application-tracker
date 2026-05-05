@@ -35,7 +35,6 @@ def extract_headers(email):
                 data["from_email"] = value.split("<")[1].replace(">", "").strip()
             else:
                 data["from_email"] = value
-
         elif name == 'Subject':
             data["subject"] = value
         elif name == 'Date':
