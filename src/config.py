@@ -38,12 +38,15 @@ GMAIL_BACKFILL_QUERY = (
     '-("unsubscribe" OR "newsletter" OR "marketing" OR "sale" OR "discount" OR "Bank of Maharashtra" OR "Vikas Pisal" OR "Recharge successful" OR "LeetCode" OR "Github" OR "Telekom" OR "Ausländerbehörde")'
     # Time filter (YYYY/MM/DD) (after-inclusive) (before-exclusive)
     'after:2026/02/01 '  # Adjust the date based on the backfilling time period
-    #'before:2026/05/01 '
+    'before:2026/05/05 '
 )
+
+# Total 196 emails in gmail app
+# Fetched 203 emails via API
 
 # To execute in gmail app:
 '''
-(in:inbox "application received" OR "thank you for applying" OR "application confirmation" OR "Ihre Bewerbung" OR "Bewerbung erhalten" OR "Deine Bewerbung" OR "interview" OR "interview invitation" OR "technical interview" OR "assessment" OR "online test" OR "coding challenge" OR "Vorstellungsgespräch" OR "Interview Einladung" OR "Einstellungstest" OR "job offer" OR "offer letter" OR "we are pleased to offer" OR "Angebot" OR "Stellenangebot" OR "rejection" OR "we regret to inform" OR "Absage" OR "nicht berücksichtigen") -from:glassdoor -from:xing -from:stepstone -from:indeed -from:linkedin -in:sent -from:me -("job alert" OR "recommended jobs" OR "jobs you may like" OR "You have a great chance for an interview for this job" OR "recommendation") -("unsubscribe" OR "newsletter" OR "marketing" OR "sale" OR "discount" OR "Bank of Maharashtra" OR "Vikas Pisal" OR "Recharge successful" OR "LeetCode" OR "Github" OR "Telekom" OR "Ausländerbehörde") after:2026/02/01 
+(in:inbox "application received" OR "thank you for applying" OR "application confirmation" OR "Ihre Bewerbung" OR "Bewerbung erhalten" OR "Deine Bewerbung" OR "interview" OR "interview invitation" OR "technical interview" OR "assessment" OR "online test" OR "coding challenge" OR "Vorstellungsgespräch" OR "Interview Einladung" OR "Einstellungstest" OR "job offer" OR "offer letter" OR "we are pleased to offer" OR "Angebot" OR "Stellenangebot" OR "rejection" OR "we regret to inform" OR "Absage" OR "nicht berücksichtigen") -from:glassdoor -from:xing -from:stepstone -from:indeed -from:linkedin -in:sent -from:me -("job alert" OR "recommended jobs" OR "jobs you may like" OR "You have a great chance for an interview for this job" OR "recommendation") -("unsubscribe" OR "newsletter" OR "marketing" OR "sale" OR "discount" OR "Bank of Maharashtra" OR "Vikas Pisal" OR "Recharge successful" OR "LeetCode" OR "Github" OR "Telekom" OR "Ausländerbehörde") after:2026/02/01 before:2026/05/05
 '''
 
 GMAIL_SYNC_QUERY = (
@@ -76,11 +79,11 @@ SHEET_COLUMN_NAME_INDEX_MAPPING = {
 # GEMINI SETTING
 GEMINI_CONFIG = {
     "api_key": os.getenv("GEMINI_API_KEY"),
-    "model": "gemini-2.5-flash-lite",
+    "model": "gemini-3.1-flash-lite-preview",
     "max_retries": 5,
     "temp": 0.2,
     "consecutive_query_delay": 5, # in seconds
 }
-# Successfully tested free gemini models (with RPD):
-# Version 2.5: gemini-2.5-flash-lite (20), gemini-2.5-flash (20),
-
+# Successfully tested free gemini models (with RPM, TPM, RPD):
+# Version 2.5: gemini-2.5-flash (5, 250k, 20), gemini-2.5-flash-lite (10, 250k, 20),
+# Version 3: gemini-3-flash-preview (5, 250k, 20), gemini-3.1-flash-lite-preview (15, 250k, 500),
