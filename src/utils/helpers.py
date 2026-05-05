@@ -1,13 +1,15 @@
-import base64
+import os
 import json
-import re
+import base64
 from pathlib import Path
 from loguru import logger
 from datetime import datetime
 from bs4 import BeautifulSoup
+from path_config import LOGS_DIR_PATH, ALL_PATHS
 from src.auth.google_auth import get_credentials
 from src.services.gmail_service import get_gmail_service
 from src.services.sheets_service import get_sheets_service
+
 
 def decode_base64(data):
     return base64.urlsafe_b64decode(data).decode('utf-8', errors='ignore')
@@ -46,23 +48,10 @@ Body:
     return text
 
 
-def generate_dedup_key(company_name:str, job_title:str):
-    if not company_name:
-        company_name = "null"
-    if not job_title:
-        job_title = "null"
-    company_name = company_name.strip().lower()
-    job_title = job_title.strip().lower()
-    company_name = re.sub(r"[^\w\s]", "", company_name)
-    job_title = re.sub(r"[^\w\s]", "", job_title)
-    company_name = re.sub(r"\s+", " ", company_name).strip().replace(" ", "-")
-    job_title = re.sub(r"\s+", " ", job_title).strip().replace(" ", "-")
-    return f"{company_name}|{job_title}"
-
-
 def append_jsonl(file_path:Path, new_data):
     with open(file_path, "a", encoding="utf-8") as f:
         f.write(json.dumps(new_data, ensure_ascii=False) + "\n")
+    logger.info(f"New data is appended to file {file_path}. | Data = {new_data}")
 
 
 def get_gmail_and_sheet_services():
@@ -72,47 +61,49 @@ def get_gmail_and_sheet_services():
     return gmail_service, sheet_service
 
 
-def prepare_new_row_data(llm_output, email_data):
-    return{
-        "application_date": email_data.get("date"),
-        "company_name": llm_output.get("normalized_company_name").strip().upper(),
-        "role": llm_output.get("normalized_job_title").strip().lower(),
-        "current_status": llm_output.get("email_type"),
-        "current_confidence": llm_output.get("confidence"),
-        "source": email_data.get("source"),
-        "history": prepare_history_to_append(llm_output, email_data),
-        "last_row_modification_date": datetime.now().strftime("%Y-%m-%d"),
-        "message_id": email_data.get("id")
+def construct_logging_object(llm_output, email_data):
+    result = {
+        "Reason": "", # will be injected on the fly
+        "llm_output": llm_output,
+        "email_data": email_data,
     }
+    return result
 
 
 
+def delete_files(files:list):
+    for file in files:
+        os.remove(file)
+        logger.info(f"File '{file}' deleted!")
 
-def prepare_row_modification_data(llm_output, email_data, existing_row):
-    pass
+
+def setup_logger():
+    log_file_name = LOGS_DIR_PATH / (datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".log")
+    logger.add(log_file_name, retention="30 days")
+    logger.info(f"Logs of this run will be saved in file '{log_file_name}'")
 
 
+def create_necessary_paths():
+    for path in ALL_PATHS:
+        if path.suffix:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.touch(exist_ok=True)
+        else:
+            path.mkdir(parents=True, exist_ok=True)
 
-def prepare_history_to_append(llm_output, email_data):
-    formatted_llm = json.dumps(llm_output, indent=2, ensure_ascii=False)
-    history_entry = f"""--- NEW EMAIL ENTRY ---
-date appended: {datetime.now().strftime("%Y-%m-%d")}
 
-llm_output:
-{formatted_llm}
-
-email metadata:
-  message id: {email_data.get("id")}
-  date received: {email_data.get("date")}
-  sender name: {email_data.get("sender_name")}
-  sender email: {email_data.get("sender_email")}
-
-subject:
-{email_data.get("subject")}
-
-body:
-{email_data.get("body")}
-
-============================================================
-"""
-    return history_entry
+def normalize_umlauts(llm_output):
+    company_name = llm_output.get("normalized_company_name", "NULL")
+    role = llm_output.get("normalized_job_title", "null")
+    translation = str.maketrans({
+        "Ä": "AE",
+        "Ö": "OE",
+        "Ü": "UE",
+        "ä": "ae",
+        "ö": "oe",
+        "ü": "ue",
+        "ß": "ss",
+    })
+    llm_output["normalized_company_name"] = company_name.translate(translation).strip().upper() # compony names are stored in sheet in upper case
+    llm_output["normalized_job_title"] = role.translate(translation).strip().lower() # roles are stored in sheet in lower case
+    return llm_output
