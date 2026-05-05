@@ -1,10 +1,12 @@
 import time
-from src.config import SHEET_COLUMN_NAME_INDEX_MAPPING
-from googleapiclient.discovery import build
-from loguru import logger
-from rapidfuzz import fuzz, process
-from datetime import datetime
 import json
+from rapidfuzz import fuzz
+from loguru import logger
+from datetime import datetime
+from googleapiclient.discovery import build
+from src.config import SHEET_COLUMN_NAME_INDEX_MAPPING
+
+
 
 
 def get_sheets_service(creds):
@@ -24,7 +26,7 @@ def append_row(service, sheet_id, data):
         data["message_id"], #  column I
     ]]
     body = {"values": values}
-    time.sleep(1) # Sleep for 1 sec to avoid "Too many requrests" error
+    time.sleep(1) # Sleep for 1 sec to avoid "Too many requests" error
     service.spreadsheets().values().append(
         spreadsheetId=sheet_id,
         range="Sheet1!A:I",
@@ -69,23 +71,31 @@ def message_exists_by_id(service, sheet_id, message_id):
     return message_id in ids
 
 
-def fuzzy_match_column_values(service, sheet_id, column_index:str, input_to_match:str, threshold:float):
+def fuzzy_match_column_values(service, sheet_id, column_index:str, status_col_index, input_to_match:str, curr_status, threshold:float):
     time.sleep(1)
     result = service.spreadsheets().values().get(
         spreadsheetId=sheet_id,
         range=f"Sheet1!{column_index}:{column_index}"
     ).execute()
+    status_res = service.spreadsheets().values().get(
+        spreadsheetId=sheet_id,
+        range=f"Sheet1!{status_col_index}:{status_col_index}"
+    ).execute()
     values = result.get("values", [])
+    status_list = status_res.get("values", [])
     matches = []
-    input_to_match = (input_to_match or "").strip().lower()
-    for idx, row in enumerate(values[1:], start=2):
+    input_to_match = (input_to_match or "").strip()
+    for idx,(row, status) in enumerate(zip(values[1:], status_list[1:]), start=2):
         if not row:
             continue
-        value = row[0].strip().lower()
-        if value in ("", "null", "n/a"):
+        if input_to_match.isupper(): # If it is upper, then it is company name
+            value = row[0].strip().upper()
+        else: # otherwise role
+            value = row[0].strip().lower()
+        if value in ("", "null", "n/a", "N/A"):
             continue
         score = fuzz.token_set_ratio(input_to_match, value) / 100
-        if score >= threshold:
+        if score >= threshold and is_next_status(status[0].strip().upper(), curr_status):
             matches.append({
                 "row_index": idx, # index == actual row number
                 "value": value,
@@ -94,7 +104,7 @@ def fuzzy_match_column_values(service, sheet_id, column_index:str, input_to_matc
     return len(matches), matches
 
 
-def fuzzy_match_company_and_role(service, sheet_id, company_col_index, role_col_index, company_name, role, threshold):
+def fuzzy_match_company_and_role(service, sheet_id, company_col_index, role_col_index, status_col_index, company_name, role, curr_status, threshold):
     time.sleep(1)
     company_res = service.spreadsheets().values().get(
         spreadsheetId=sheet_id,
@@ -105,16 +115,21 @@ def fuzzy_match_company_and_role(service, sheet_id, company_col_index, role_col_
         spreadsheetId=sheet_id,
         range=f"Sheet1!{role_col_index}:{role_col_index}"
     ).execute()
+    status_res = service.spreadsheets().values().get(
+        spreadsheetId=sheet_id,
+        range=f"Sheet1!{status_col_index}:{status_col_index}"
+    ).execute()
     company_col = company_res.get("values", [])
     role_col = role_res.get("values", [])
+    status_col = status_res.get("values", [])
     matches = []
-    for idx, (c_name, r_name) in enumerate(zip(company_col[1:], role_col[1:]), start=2):
-        c_name = c_name[0].lower() if c_name else ""
-        r_name = r_name[0].lower() if r_name else ""
+    for idx, (c_name, r_name, status) in enumerate(zip(company_col[1:], role_col[1:], status_col[1:]), start=2):
+        c_name = c_name[0].strip().upper() if c_name else ""
+        r_name = r_name[0].strip().lower() if r_name else ""
         c_score = fuzz.token_set_ratio(company_name, c_name) / 100
         r_score = fuzz.token_set_ratio(role, r_name) / 100
         final_score = c_score * 0.6 + r_score * 0.4
-        if final_score >= threshold:
+        if final_score >= threshold and is_next_status(status[0].strip().upper(), curr_status):
             matches.append({
                 "row_index": idx, # index == actual row number
                 "company_name": c_name,
@@ -132,15 +147,6 @@ def get_all_rows(service, sheet_id):
     ).execute()
     return result.get("values", [])
 
-
-def is_similar_dedup_key(key1: str, key2: str, threshold=85):
-    company1, title1 = key1.split("|")
-    company2, title2 = key2.split("|")
-    company_score = fuzz.partial_ratio(company1, company2)
-    title_score = fuzz.token_sort_ratio(title1, title2)
-    # weight company higher (more important)
-    final_score = (0.6 * company_score) + (0.4 * title_score)
-    return final_score >= threshold
 
 
 def prepare_new_row_data(llm_output, email_data):
@@ -182,6 +188,8 @@ def prepare_row_modification_data(llm_output, email_data, existing_row):
     modified_row.append(new_status_flow)
     # update history
     new_history = existing_row[6] + prepare_history_to_append(llm_output, email_data)
+    if len(new_history) >= 50000:
+        new_history = new_history[0:49980] + f"\n TRUNCATED....."
     modified_row.append(new_history)
     # add last row modification date
     modified_row.append(datetime.now().strftime("%Y-%m-%d"))
@@ -191,8 +199,27 @@ def prepare_row_modification_data(llm_output, email_data, existing_row):
     return [modified_row]
 
 
+def is_next_status(old_status, new_status):
+    status_scores = {
+        "APPLIED": 0,
+        "TEST_INVITATION": 1,
+        "INTERVIEW": 1,
+        "OFFER": 2,
+        "REJECTION": 2,
+        "OTHER": 3
+    }
+    return status_scores[new_status] >= status_scores[old_status]
+
+
 def prepare_history_to_append(llm_output, email_data):
     formatted_llm = json.dumps(llm_output, indent=2, ensure_ascii=False)
+    email_metadata = {
+        "message id": email_data.get("id"),
+        "received date": email_data.get("date"),
+        "sender name": email_data.get("sender_name"),
+        "sender email": email_data.get("sender_email")
+    }
+    email_metadata = json.dumps(email_metadata, indent=2, ensure_ascii=False)
     history_entry = f"""--- NEW EMAIL ENTRY ---
 date appended: {datetime.now().strftime("%Y-%m-%d")}
 
@@ -200,10 +227,7 @@ llm_output:
 {formatted_llm}
 
 email metadata:
-  message id: {email_data.get("id")}
-  date received: {email_data.get("date")}
-  sender name: {email_data.get("sender_name")}
-  sender email: {email_data.get("sender_email")}
+{email_metadata}
 
 subject:
 {email_data.get("subject")}
@@ -213,4 +237,6 @@ body:
 
 =================================================================================================================================
 """
+    if len(history_entry) >= 50000:
+        history_entry = history_entry[0:49980] + f"\n TRUNCATED....."
     return history_entry
