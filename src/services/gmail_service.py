@@ -1,8 +1,8 @@
 import json
-from googleapiclient.discovery import build
-from src.config import GMAIL_QUERY
-from path_config import FETCHED_EMAILS
 from loguru import logger
+from googleapiclient.discovery import build
+from path_config import FETCHED_EMAILS
+
 
 
 def get_gmail_service(creds):
@@ -11,6 +11,7 @@ def get_gmail_service(creds):
 
 # With Pagination
 def fetch_all_emails_and_save(service, query, max_per_page=100):
+    logger.info("Fetching and Saving Emails...")
     emails = []
     request = service.users().messages().list(
         userId="me",
