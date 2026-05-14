@@ -89,17 +89,3 @@ Project has mainly two modes:
    - If syncing, then run ```src\sync.py```
 
 ---
-
-## Demo Tracking Data 
-
-### Sheet Overview
-<p align="center">
-  <img src="assets/2-sheet.png" width="700">
-</p>
-
-### History Column
-<p align="center">
-  <img src="assets/2-sheet-history.png" width="700">
-</p>
-
----
