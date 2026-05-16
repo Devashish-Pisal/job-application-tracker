@@ -19,6 +19,8 @@ data/manual_check/
 /data/credentials.json
 /data/token.json
 
+job-application-tracker-repo-kb.md
+
 # Distribution / packaging
 .Python
 build/
