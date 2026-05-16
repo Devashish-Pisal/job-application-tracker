@@ -81,9 +81,9 @@ def pipeline():
                             client=client,
                             system_prompt=system_prompt,
                             email_data=formated_email_data,
-                            model=GEMINI_CONFIG["model"],
+                            models=GEMINI_CONFIG["model_list"],
                             max_retries=GEMINI_CONFIG["max_retries"],
-                            temp=GEMINI_CONFIG["temp"]
+                            temp=GEMINI_CONFIG["temperature"]
                         )
                         llm_output = normalize_umlauts(llm_output)
                         logging_obj = construct_logging_object(llm_output, email_data)
