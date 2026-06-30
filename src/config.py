@@ -79,10 +79,10 @@ SHEET_COLUMN_NAME_INDEX_MAPPING = {
 # GEMINI SETTING
 GEMINI_CONFIG = {
     "api_key": os.getenv("GEMINI_API_KEY"),
-    "model_list": ["gemini-3-flash-preview", "gemini-3.1-flash-lite-preview", "gemini-2.5-flash", "gemini-2.5-flash-lite"],
+    "model_list": ["gemini-3.1-flash-lite-preview", "gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3-flash-preview"],
     "temperature": 0.1,
 
-    "max_retries": 5,
+    "max_retries": 3,
     "consecutive_query_delay": 2, # in seconds
 }
 # Successfully tested free gemini models (with RPM, TPM, RPD):
