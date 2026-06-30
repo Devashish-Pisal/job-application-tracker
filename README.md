@@ -89,3 +89,15 @@ Project has mainly two modes:
    - If syncing, then run ```src\sync.py```
 
 ---
+
+**Note**: Sometimes if project is not used for some days the authentication token gets invalidated and cannot refresh dynamically at runtime. In that case application throws following error:
+````
+google.auth.exceptions.RefreshError: ('invalid_grant: Bad Request', {'error': 'invalid_grant', 'error_description': 'Bad Request'})
+````
+**Solution**: To solve this problem simply follow following steps: 
+1. First delete old ``token.json`` file. 
+2. Start the application. 
+3. Application will open browser to login into google cloud account.
+4. Google will prompt to grant application access to the Gmail & Google Sheets. Grant the access. 
+5. New ``token.json`` file will be generated automatically, which are can reused & refreshed before expiry. 
+---
