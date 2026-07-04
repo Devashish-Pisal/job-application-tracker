@@ -4,6 +4,8 @@
 
 Automate job application tracking by parsing Gmail emails and logging them to Google Sheets by using Gmail API, Google Sheets API, OAuth 2.0, Gemini LLM and Python.
 
+![Demo](assets/demo.gif)
+
 ---
 
 ## (Backfilling + Sync) Pipeline Overview
