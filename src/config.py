@@ -50,7 +50,8 @@ GMAIL_BACKFILL_QUERY = (
 '''
 
 GMAIL_SYNC_QUERY = (
-    'label:job-application '
+    'label:jobsuche'
+    # 'label:job-application '
     # Adjust the following time periods based on sync frequency
     # 'after:2026/05/01 ' # inclusive (YYYY/MM/DD)
     # 'before:2026/05/04 ' # exclusive (YYYY/MM/DD)
