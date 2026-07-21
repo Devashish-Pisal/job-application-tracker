@@ -20,5 +20,5 @@ DUP_BY_FUZZY_MATCH = MANUAL_CHECK_DIR / "duplicate_by_fuzzy_matching.jsonl"
 # List of all paths to create the folders and files dynamically at once before starting application
 ALL_PATHS = [
     DATA_DIR_PATH, PROMPTS_DIR_PATH, MANUAL_CHECK_DIR, FETCHED_EMAILS, LOGS_DIR_PATH,
-    CREDENTIALS_FILE_PATH, TOKEN_FILE_PATH, DUP_BY_MSG_ID_FILE_PATH, LLM_LOW_CONF_OUTPUT_FILE, DUP_BY_FUZZY_MATCH
+    DUP_BY_MSG_ID_FILE_PATH, LLM_LOW_CONF_OUTPUT_FILE, DUP_BY_FUZZY_MATCH
 ]
