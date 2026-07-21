@@ -23,7 +23,7 @@ def process_high_conf_output(sheet_service,llm_output, email_data, logging_obj):
     new_entry = prepare_new_row_data(llm_output=llm_output, email_data=email_data)
 
     if company_name and role and company_name != "NULL" and role != "null": # Company name - Present; Role - Present
-        count, matches = fuzzy_match_company_and_role(sheet_service, SHEET_ID, company_name_col_index, role_col_index, status_col_index, company_name, role, current_status, threshold=0.87)
+        count, matches = fuzzy_match_company_and_role(sheet_service, SHEET_ID, SHEET_COLUMN_NAME_INDEX_MAPPING.values(), company_name_col_index, role_col_index, status_col_index, company_name, role, current_status, company_fuzzy_threshold, role_fuzzy_threshold)
         if count == 0:
             append_row(service=sheet_service, sheet_id=SHEET_ID, data=new_entry)
         elif count == 1:
