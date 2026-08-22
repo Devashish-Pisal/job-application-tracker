@@ -18,6 +18,7 @@ data/manual_check/
 .env
 /data/credentials.json
 /data/token.json
+gmail_api_sample.txt
 
 job-application-tracker-repo-kb.md
 
