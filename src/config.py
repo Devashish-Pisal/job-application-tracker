@@ -35,7 +35,7 @@ GMAIL_BACKFILL_QUERY = (
     # Exclude common job-alert phrasing
     '-("job alert" OR "recommended jobs" OR "jobs you may like" OR "You have a great chance for an interview for this job" OR "recommendation") '
     # Noise reduction
-    '-("unsubscribe" OR "newsletter" OR "marketing" OR "sale" OR "discount" OR "Bank of Maharashtra" OR "Vikas Pisal" OR "Recharge successful" OR "LeetCode" OR "Github" OR "Telekom" OR "Ausländerbehörde")'
+    '-("unsubscribe" OR "newsletter" OR "marketing" OR "sale" OR "discount"  OR "Recharge successful" OR "LeetCode" OR "Github" OR "Telekom")'
     # Time filter (YYYY/MM/DD) (after-inclusive) (before-exclusive)
     'after:2026/02/01 '  # Adjust the date based on the backfilling time period
     'before:2026/05/05 '
